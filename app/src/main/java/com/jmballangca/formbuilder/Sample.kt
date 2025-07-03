@@ -11,6 +11,7 @@ class Sample {
             Validator.Email()
         )
     )
+
     val passwordControl = FormControl(
         initialValue = "",
         validators = listOf(
@@ -27,6 +28,5 @@ class Sample {
     val valid = loginForm.valid
     val errors = loginForm.errors
     val invalid = loginForm.invalid
-
 
 }
