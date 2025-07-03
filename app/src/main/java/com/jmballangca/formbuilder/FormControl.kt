@@ -3,27 +3,29 @@ package com.jmballangca.formbuilder
 
 
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
-
-
 class FormControl(
-    val name: String,
     private val initialValue: String,
     val validators: List<Validator> = emptyList()
 ) {
     var value by mutableStateOf(initialValue)
     var error by mutableStateOf<EValidator?>(null)
+    var errors by mutableStateOf<List<String>>(emptyList())
+    val lastError by derivedStateOf { errors.lastOrNull() }
+    val firstError by derivedStateOf { errors.firstOrNull() }
 
     var touched by mutableStateOf(false)
     var dirty by mutableStateOf(false)
 
     val valid: Boolean
-        get() = error == null
+        get() = errors.isEmpty()
 
     private fun validate() {
+        errors = validators.filterNot { it.isValid(value) }.map { it.message }
         error = validators.firstOrNull { !it.isValid(value) }?.error
     }
 
@@ -49,6 +51,7 @@ class FormControl(
     fun reset() {
         value = initialValue
         error = null
+        errors = emptyList()
         touched = false
         dirty = false
     }

@@ -1,5 +1,11 @@
 package com.jmballangca.formbuilder
 
+import android.util.Patterns
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Locale
+import kotlin.text.Regex
+
 
 sealed class Validator {
     abstract fun isValid(value: String): Boolean
@@ -23,18 +29,57 @@ sealed class Validator {
 
     class Email(override val message: String = "Invalid email format") : Validator() {
         override fun isValid(value: String) =
-            value.matches(Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"))
+            Patterns.EMAIL_ADDRESS.matcher(value).matches()
 
         override val error = EValidator.EMAIL
     }
 
+
+
     class Phone(override val message: String = "Invalid phone number") : Validator() {
-        override fun isValid(value: String) = value.matches(Regex("^\\+?[0-9]{10,15}$"))
-        override val error = EValidator.PHONE
+
+        override fun isValid(value: String): Boolean =
+            Patterns.PHONE.matcher(value).matches()
+
+        override val error: EValidator = EValidator.PHONE
     }
+
 
     class Number(override val message: String = "Must be a number") : Validator() {
         override fun isValid(value: String) = value.toDoubleOrNull() != null
         override val error = EValidator.NUMBER
     }
+
+
+
+
+    class Alpha(override val message: String = "Only alphabetic characters allowed") : Validator() {
+        override fun isValid(value: String) = value.matches(Regex("^[a-zA-Z]+$"))
+        override val error = EValidator.ALPHA
+    }
+
+    class Alphanumeric(override val message: String = "Only letters and numbers allowed") : Validator() {
+        override fun isValid(value: String) = value.matches(Regex("^[a-zA-Z0-9]+$"))
+        override val error = EValidator.ALPHANUMERIC
+    }
+
+    class Url(override val message: String = "Invalid URL format") : Validator() {
+        override fun isValid(value: String) = Patterns.WEB_URL.matcher(value).matches()
+        override val error = EValidator.URL
+    }
+
+    class Date(override val message: String = "Invalid date format") : Validator() {
+        override fun isValid(value: String): Boolean =
+            try {
+                SimpleDateFormat("DD/MM/YYYY", Locale.getDefault()).parse(value)
+                true
+            } catch (e: ParseException) {
+                false
+            }
+
+        override val error = EValidator.DATE
+    }
+
+
+
 }

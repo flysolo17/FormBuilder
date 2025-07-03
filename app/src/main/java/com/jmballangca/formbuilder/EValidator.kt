@@ -6,5 +6,9 @@ enum class EValidator {
     MAX_LENGTH,
     EMAIL,
     PHONE,
-    NUMBER
+    NUMBER,
+    ALPHA,
+    ALPHANUMERIC,
+    DATE,
+    URL,
 }
