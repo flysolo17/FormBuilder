@@ -80,6 +80,36 @@ sealed class Validator {
         override val error = EValidator.DATE
     }
 
+    class Uppercase(override val message: String = "At least one uppercase letter required") : Validator() {
+        override fun isValid(value: String) = value.any { it.isUpperCase() }
+        override val error = EValidator.CONTAINS_UPPERCASE
+    }
+    class Lowercase(override val message: String = "At least one lowercase letter required") : Validator() {
+        override fun isValid(value: String) = value.any { it.isLowerCase() }
+        override val error = EValidator.CONTAINS_LOWERCASE
+    }
+    class Digit(
+        val min: Int = 1,
+        override val message: String = "At least $min digit(s) required"
+    ) : Validator() {
+
+        override fun isValid(value: String): Boolean {
+            val digitCount = value.count { it.isDigit() }
+            return digitCount >= min
+        }
+
+        override val error = EValidator.CONTAINS_DIGIT
+    }
+
+    class SpecialChar(override val message: String = "At least one special character required") : Validator() {
+        override fun isValid(value: String) = value.any { !it.isLetterOrDigit() }
+        override val error = EValidator.CONTAINS_SPECIAL_CHAR
+    }
+
+    class NoWhiteSpaces(override val message: String = "White spaces not allowed") : Validator() {
+        override fun isValid(value: String) = !value.contains(" ")
+        override val error = EValidator.NO_WHITE_SPACES
+    }
 
 
 }
