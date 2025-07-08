@@ -6,110 +6,157 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.text.Regex
 
+/**
+ * A sealed class representing different types of form field validators.
+ *
+ * Each validator provides:
+ * - A customizable [message] describing the validation failure. You can pass your own message when creating the validator to override the default one.
+ * - An [isValid] function that checks if a given value passes the validation.
+ *
+ *  * ### Pre-built Validators (Version - 1.0.4):
+ *   - [Validator.Required] — Ensures the field is not blank.
+ *   - [Validator.MinLength] — Ensures the value meets a minimum length.
+ *   - [Validator.MaxLength] — Ensures the value does not exceed a maximum length.
+ *   - [Validator.Email] — Validates proper email format.
+ *   - [Validator.Phone] — Validates phone number format.
+ *   - [Validator.Number] — Ensures the value is a valid number.
+ *   - [Validator.Alpha] — Allows only alphabetic characters.
+ *   - [Validator.Alphanumeric] — Allows letters and numbers only.
+ *   - [Validator.Url] — Validates URL format.
+ *   - [Validator.Date] — Validates date format (DD/MM/YYYY).
+ *   - [Validator.ContainsUppercase] — Ensures a minimum number of uppercase letters.
+ *   - [Validator.ContainsLowercase] — Ensures a minimum number of lowercase letters.
+ *   - [Validator.ContainsDigit] — Ensures a minimum number of digits.
+ *   - [Validator.SpecialChar] — Ensures at least one special character.
+ *   - [Validator.NoWhiteSpaces] — Ensures no white spaces.
+ *
+ *
+ * ### Example: Creating a Custom Validator
+ *
+ * You can create your own custom validator by extending this class:
+ *
+ * ```kotlin
+ * class ExactLengthValidator(
+ *     private val length: Int,
+ *     override val message: String = "Must be exactly $length characters"
+ * ) : Validator() {
+ *     override fun isValid(value: String): Boolean = value.length == length
+ * }
+ *
+ * val formControl = FormControl(
+ *     initialValue = "",
+ *     validators = listOf(
+ *         Validator.Required(),
+ *         ExactLengthValidator(4),
+ *         Validator.NoWhiteSpaces()
+ *     )
+ * )
+ *
+ * formControl.set("test")
+ * formControl.validate()
+ *
+ * println(formControl.errors)  // Prints error messages if any validation fails
+ * ```
+ *
+ * This allows you to easily add new validation rules tailored to your specific needs.
+ */
 
 sealed class Validator {
-    abstract fun isValid(value: String): Boolean
-    abstract val error: EValidator
+
+
     abstract val message: String
+
+
+    abstract fun isValid(value: String): Boolean
+
 
     class Required(override val message: String = "This field is required") : Validator() {
         override fun isValid(value: String) = value.isNotBlank()
-        override val error = EValidator.REQUIRED
     }
+
 
     class MinLength(val min: Int, override val message: String = "Minimum $min characters required") : Validator() {
         override fun isValid(value: String) = value.length >= min
-        override val error = EValidator.MIN_LENGTH
     }
+
 
     class MaxLength(val max: Int, override val message: String = "Maximum $max characters allowed") : Validator() {
         override fun isValid(value: String) = value.length <= max
-        override val error = EValidator.MAX_LENGTH
     }
+
 
     class Email(override val message: String = "Invalid email format") : Validator() {
-        override fun isValid(value: String) =
-            Patterns.EMAIL_ADDRESS.matcher(value).matches()
-
-        override val error = EValidator.EMAIL
+        override fun isValid(value: String) = Patterns.EMAIL_ADDRESS.matcher(value).matches()
     }
-
 
 
     class Phone(override val message: String = "Invalid phone number") : Validator() {
-
-        override fun isValid(value: String): Boolean =
-            Patterns.PHONE.matcher(value).matches()
-
-        override val error: EValidator = EValidator.PHONE
+        override fun isValid(value: String) = Patterns.PHONE.matcher(value).matches()
     }
 
 
     class Number(override val message: String = "Must be a number") : Validator() {
         override fun isValid(value: String) = value.toDoubleOrNull() != null
-        override val error = EValidator.NUMBER
     }
-
-
-
 
     class Alpha(override val message: String = "Only alphabetic characters allowed") : Validator() {
         override fun isValid(value: String) = value.matches(Regex("^[a-zA-Z]+$"))
-        override val error = EValidator.ALPHA
     }
+
 
     class Alphanumeric(override val message: String = "Only letters and numbers allowed") : Validator() {
         override fun isValid(value: String) = value.matches(Regex("^[a-zA-Z0-9]+$"))
-        override val error = EValidator.ALPHANUMERIC
     }
 
     class Url(override val message: String = "Invalid URL format") : Validator() {
         override fun isValid(value: String) = Patterns.WEB_URL.matcher(value).matches()
-        override val error = EValidator.URL
     }
 
-    class Date(override val message: String = "Invalid date format") : Validator() {
-        override fun isValid(value: String): Boolean =
-            try {
-                SimpleDateFormat("DD/MM/YYYY", Locale.getDefault()).parse(value)
-                true
-            } catch (e: ParseException) {
-                false
-            }
 
-        override val error = EValidator.DATE
-    }
-
-    class Uppercase(override val message: String = "At least one uppercase letter required") : Validator() {
-        override fun isValid(value: String) = value.any { it.isUpperCase() }
-        override val error = EValidator.CONTAINS_UPPERCASE
-    }
-    class Lowercase(override val message: String = "At least one lowercase letter required") : Validator() {
-        override fun isValid(value: String) = value.any { it.isLowerCase() }
-        override val error = EValidator.CONTAINS_LOWERCASE
-    }
-    class Digit(
-        val min: Int = 1,
-        override val message: String = "At least $min digit(s) required"
+    class Date(
+        val defaultFormat: String = "MM/DD/yyyy",
+        override val message: String = "Invalid date format"
     ) : Validator() {
-
-        override fun isValid(value: String): Boolean {
-            val digitCount = value.count { it.isDigit() }
-            return digitCount >= min
+        override fun isValid(value: String): Boolean = try {
+            SimpleDateFormat(defaultFormat, Locale.getDefault()).parse(value)
+            true
+        } catch (e: ParseException) {
+            false
         }
-
-        override val error = EValidator.CONTAINS_DIGIT
     }
 
+    /**
+     * Validates that the value contains at least [min] uppercase letters.
+     */
+    class ContainsUppercase(val min: Int = 1, override val message: String = "At least $min uppercase letter required") : Validator() {
+        override fun isValid(value: String) = value.count { it.isUpperCase() } >= min
+    }
+
+    /**
+     * Validates that the value contains at least [min] lowercase letters.
+     */
+    class ContainsLowercase(val min: Int = 1, override val message: String = "At least $min lowercase letter required") : Validator() {
+        override fun isValid(value: String) = value.count { it.isLowerCase() } >= min
+    }
+
+    /**
+     * Validates that the value contains at least [min] digits.
+     */
+    class ContainsDigit(val min: Int = 1, override val message: String = "At least $min digit(s) required") : Validator() {
+        override fun isValid(value: String) = value.count { it.isDigit() } >= min
+    }
+
+    /**
+     * Validates that the value contains at least one special character.
+     */
     class SpecialChar(override val message: String = "At least one special character required") : Validator() {
         override fun isValid(value: String) = value.any { !it.isLetterOrDigit() }
-        override val error = EValidator.CONTAINS_SPECIAL_CHAR
     }
 
+    /**
+     * Validates that the value does not contain any whitespace characters.
+     */
     class NoWhiteSpaces(override val message: String = "White spaces not allowed") : Validator() {
         override fun isValid(value: String) = !value.contains(" ")
-        override val error = EValidator.NO_WHITE_SPACES
     }
-
-
 }

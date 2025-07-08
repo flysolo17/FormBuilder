@@ -16,17 +16,17 @@ class Sample {
         initialValue = "",
         validators = listOf(
             Validator.Required(),
-            Validator.MinLength(8)
+            Validator.MinLength(8),
         )
     )
+
     val loginForm = FormBuilder(
         controls = mapOf(
             "email" to emailControl,
             "password" to passwordControl
         )
     )
-    val valid = loginForm.valid
+    val valid = emailControl.isDirtyUnfocusedError
     val errors = loginForm.errors
     val invalid = loginForm.invalid
-
 }
