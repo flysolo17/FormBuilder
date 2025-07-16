@@ -61,7 +61,7 @@ import kotlin.text.Regex
  * This allows you to easily add new validation rules tailored to your specific needs.
  */
 
-sealed class Validator {
+abstract class Validator {
 
 
     abstract val message: String
